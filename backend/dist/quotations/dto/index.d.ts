@@ -1,2 +1,0 @@
-export * from './create-quotation.dto';
-export * from './update-quotation.dto';
