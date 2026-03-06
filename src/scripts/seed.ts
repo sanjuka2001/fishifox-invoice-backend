@@ -18,21 +18,35 @@ import { Service } from '../services/entities/service.entity';
 
 dotenv.config();
 
-const dataSource = new DataSource({
-    type: 'postgres',
-    host: process.env.DB_HOST || 'localhost',
-    port: parseInt(process.env.DB_PORT || '5432', 10),
-    username: process.env.DB_USERNAME || 'postgres',
-    password: process.env.DB_PASSWORD || 'password',
-    database: process.env.DB_DATABASE || 'fishifox',
-    entities: [
-        User, Task, Project, Customer, CustomerEmail,
-        Quotation, QuotationItem, Invoice, InvoiceItem,
-        Payment, ProjectDocument, ProjectVault,
-        ServiceReminder, Service
-    ],
-    synchronize: false, // Don't sync, just insert
-});
+const entities = [
+    User, Task, Project, Customer, CustomerEmail,
+    Quotation, QuotationItem, Invoice, InvoiceItem,
+    Payment, ProjectDocument, ProjectVault,
+    ServiceReminder, Service
+];
+
+const databaseUrl = process.env.DATABASE_URL;
+
+const dataSource = new DataSource(
+    databaseUrl
+        ? {
+            type: 'postgres',
+            url: databaseUrl,
+            entities,
+            synchronize: false,
+            ssl: { rejectUnauthorized: false },
+        }
+        : {
+            type: 'postgres',
+            host: process.env.DB_HOST || 'localhost',
+            port: parseInt(process.env.DB_PORT || '5432', 10),
+            username: process.env.DB_USERNAME || 'postgres',
+            password: process.env.DB_PASSWORD || 'password',
+            database: process.env.DB_DATABASE || 'fishifox',
+            entities,
+            synchronize: false,
+        }
+);
 
 async function seed() {
     try {
@@ -46,7 +60,8 @@ async function seed() {
         if (adminExists) {
             console.log('Admin user already exists.');
         } else {
-            const hashedPassword = await bcrypt.hash('password123', 10);
+            const adminPassword = process.env.ADMIN_PASSWORD || 'F!sh1f0x@Adm1n2026';
+            const hashedPassword = await bcrypt.hash(adminPassword, 10);
             const admin = userRepository.create({
                 email: 'admin@fishifox.com',
                 password: hashedPassword,
@@ -63,7 +78,8 @@ async function seed() {
         if (staffExists) {
             console.log('Staff user already exists.');
         } else {
-            const hashedPassword = await bcrypt.hash('password123', 10);
+            const staffPassword = process.env.STAFF_PASSWORD || 'F!sh1f0x@St4ff2026';
+            const hashedPassword = await bcrypt.hash(staffPassword, 10);
             const staff = userRepository.create({
                 email: 'staff@fishifox.com',
                 password: hashedPassword,
